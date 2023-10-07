@@ -9,9 +9,13 @@ import encyclopedia
 # Lets me use Markdown
 markdowner = Markdown()
 
-# Class for entries
+# Class used for entries and search
 class SearchForm(forms.Form):
     query = forms.CharField(max_length=100)
+
+class CreateForm(forms.Form):
+    title = forms.CharField(label="Add Title")
+    body = forms.CharField(label="Add Body", widget=forms.Textarea())
 
 # Home Page
 def index(request):
@@ -79,6 +83,42 @@ def search(request):
         content = "No search result was found."
         return render(request, "encyclopedia/error.html", {
             'form': form, 'content': content
+        })
+
+# Create a New Entry Page
+def create(request):
+    if request.method == "POST":
+        createform = CreateForm(request.POST)
+        if createform.is_valid():
+            title = createform.cleaned_data.get("title")
+            body = createform.cleaned_data.get("body")
+            exists = False
+            # See if title is already taken
+            for entry in util.list_entries():
+                if title.lower() == entry.lower():
+                    exists = True
+                    break
+            # Title is already in entries
+            if exists:
+                content = "This page already exists."
+                form = SearchForm()
+                return render(request, "encyclopedia/error.html", {
+                    'form': form, "content": content
+                })
+            # Title doesn't exist so save the entry
+            else:
+                util.save_entry(title, body)
+                form = SearchForm()
+                mdfile = util.get_entry(title)
+                htmlfile = markdowner.convert(mdfile)
+                return render(request, "encyclopedia/entry.html", {
+                    "title": title, "content": htmlfile, "form": form
+                })
+    else:
+        form = SearchForm()
+        createform = CreateForm()
+        return render(request, "encyclopedia/create.html", {
+            "form": form, "createform": createform
         })
 
 # Random Page
