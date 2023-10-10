@@ -1,16 +1,16 @@
 {% extends "encyclopedia/layout.html" %}
 
 {% block title %}
-    Create Entry
+    Edit Entry
 {% endblock %}
 
 {% block body %}
-    <h1>Create a New Entry</h1>
+    <h1>Edit Entry</h1>
 
     <div>
-        <form action="{% url 'create' %}" method="POST">
+        <form action="{% url 'edit' title=editform.data.title %}" method="POST">
             {% csrf_token %}
-            {{ createform.as_p }}
+            {{ editform.as_p }}
             <input type="Submit" name="submit" value="Submit"/>
         </form>
     </div>

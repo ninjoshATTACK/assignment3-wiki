@@ -13,9 +13,14 @@ markdowner = Markdown()
 class SearchForm(forms.Form):
     query = forms.CharField(max_length=100)
 
+# Class for creating new entries
 class CreateForm(forms.Form):
     title = forms.CharField(label="Add Title")
     body = forms.CharField(label="Add Body", widget=forms.Textarea())
+
+class EditForm(forms.Form):
+    title = forms.CharField(label="Edit Title")
+    body = forms.CharField(label="Edit Body", widget=forms.Textarea())
 
 # Home Page
 def index(request):
@@ -119,6 +124,26 @@ def create(request):
         createform = CreateForm()
         return render(request, "encyclopedia/create.html", {
             "form": form, "createform": createform
+        })
+
+# Edit Page
+def edit(request, title):
+    if request.method == "POST":
+        editform = EditForm(request.POST)
+        if editform.is_valid():
+            title = editform.cleaned_data.get("title")
+            body = editform.cleaned_data.get("body")
+            util.save_entry(title, body)
+            form = SearchForm()
+            htmlfile = markdowner.convert(body)
+            return render(request, "encyclopedia/entry.html", {
+                "title": title, "content": htmlfile, "form": form
+            })
+    else:
+        form = SearchForm()
+        editform = EditForm({"title": title, "body": util.get_entry(title)})
+        return render(request, "encyclopedia/edit.html", {
+            "form": form, "editform": editform
         })
 
 # Random Page
